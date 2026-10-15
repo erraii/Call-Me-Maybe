@@ -1,5 +1,7 @@
 import json
 from pathlib import Path
+from pydantic import ValidationError
+from src.validation import validate_prompts
 
 
 def main() -> None:
@@ -22,8 +24,15 @@ def main() -> None:
         return
 
     else:
-        for item in prompts:
-            print(item["prompt"])
+        # for item in prompts:
+        #     print(item["prompt"])
+        try:
+            validated_prompts = validate_prompts(prompts)
+        except ValidationError as error:
+            print(f"Invalid input structure: {error}")
+            return
+        for item in validated_prompts:
+            print(item.prompt)
 
 
 if __name__ == "__main__":
