@@ -1,5 +1,6 @@
 """Validate application inputs using Pydantic models."""
 
+from typing import Literal
 from pydantic import BaseModel, ConfigDict, TypeAdapter
 
 
@@ -12,6 +13,25 @@ class PromptInput(BaseModel):
     model_config = ConfigDict(strict=True, extra="forbid")
 
     prompt: str
+
+
+class TypeDefinition(BaseModel):
+    """Describe the declared type of a parameter or return value."""
+
+    model_config = ConfigDict(strict=True, extra="forbid")
+
+    type: Literal["string", "number", "boolean"]
+
+
+class FunctionDefinition(BaseModel):
+    """Describe an available function and its input/output types."""
+
+    model_config = ConfigDict(strict=True, extra="forbid")
+
+    name: str
+    description: str
+    parameters: dict[str, TypeDefinition]
+    returns: TypeDefinition
 
 
 def validate_prompts(data: object) -> list[PromptInput]:
@@ -29,4 +49,21 @@ def validate_prompts(data: object) -> list[PromptInput]:
     """
     # Validate the outer list as well as each request it contains.
     adapter = TypeAdapter(list[PromptInput])
+    return adapter.validate_python(data, strict=True)
+
+
+def validate_functions(data: object) -> list[FunctionDefinition]:
+    """Validate function definitions and convert them into models.
+
+    Args:
+        data: Python data loaded from the function definitions file.
+
+    Returns:
+        A list of validated FunctionDefinition objects.
+
+    Raises:
+        ValidationError: If the input is not a list or a definition
+            does not match the expected schema.
+    """
+    adapter = TypeAdapter(list[FunctionDefinition])
     return adapter.validate_python(data, strict=True)
