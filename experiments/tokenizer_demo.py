@@ -20,12 +20,35 @@ def main() -> None:
     sequence = token_ids[0]
     decoded_text = model.decode(sequence)
     for token in token_ids[0]:
+        print(f"Python type of token: {type(token)}")
         decoded_token = model.decode(token)
         print(f"Decoded token: {decoded_token!r}")
 
     print(f"Selected sequence: {sequence}")
     print(f"Sequence shape: {sequence.shape}")
     print(f"Decoded text: {decoded_text!r}")
+
+    # The SDK expects a Python list of token IDs.
+    input_ids: list[int] = sequence.tolist()
+    logits = model.get_logits_from_input_ids(input_ids)
+
+    # Rank token IDs by their scores, from highest to lowest.
+    top_ids = sorted(
+        range(len(logits)),
+        key=lambda token_id: logits[token_id],
+        reverse=True,
+    )[:5]
+
+    print(f"\nNumber of candidate tokens: {len(logits)}")
+    print("Top 5 next-token candidates:")
+
+    for token_id in top_ids:
+        token_text = model.decode([token_id])
+        print(
+            f"ID: {token_id:>6} | "
+            f"Score: {logits[token_id]:>8.3f} | "
+            f"Text: {token_text!r}"
+        )
 
 
 if __name__ == "__main__":
