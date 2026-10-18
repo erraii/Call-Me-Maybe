@@ -1,0 +1,6 @@
+mkdir -p "/goinfre/$USER/call-me-maybe"
+export UV_PROJECT_ENVIRONMENT="/goinfre/$USER/call-me-maybe/venv"
+export UV_CACHE_DIR="/goinfre/$USER/call-me-maybe/uv-cache"
+export HF_HOME="/goinfre/$USER/call-me-maybe/huggingface"
+export TMPDIR="/goinfre/$USER/call-me-maybe/tmp"
+mkdir -p "$UV_CACHE_DIR" "$HF_HOME" "$TMPDIR"
