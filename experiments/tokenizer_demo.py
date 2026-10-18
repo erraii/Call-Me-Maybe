@@ -19,6 +19,7 @@ def main() -> None:
     # Select that sequence before passing it to decode().
     sequence = token_ids[0]
     decoded_text = model.decode(sequence)
+    print(sequence.dtype)       # torch.int64
     for token in token_ids[0]:
         print(f"Python type of token: {type(token)}")
         decoded_token = model.decode(token)
