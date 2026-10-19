@@ -9,6 +9,7 @@ from pydantic import ValidationError
 from src.file_io import read_json
 from src.validation import validate_functions, validate_prompts
 from src.function_catalog import find_function
+from src.number_generation import generate_number_arguments
 
 
 def main() -> None:
@@ -68,6 +69,10 @@ def main() -> None:
     token_texts: dict[int, str] = {}
     tokens_prepared = False
 
+    # Unlike the function-name cache, this cache must include JSON
+    # punctuation, numbers, whitespace, and parameter-name characters.
+    argument_token_texts: dict[int, str] = {}
+
     for request in requests:
         prompt = (
             "<|im_start|>user\n"
@@ -97,6 +102,10 @@ def main() -> None:
                         continue
 
                     text = model.decode([token_id])
+
+                    # This experiment uses ASCII JSON, including escaped keys.
+                    if text and text.isascii():
+                        argument_token_texts[token_id] = text
 
                     # Reject empty text so every token makes progress.
                     # This is a broad filter; prefix checks happen later.
@@ -169,6 +178,26 @@ def main() -> None:
             print(f"Parameter: {name} | Type: {definition.type}")
 
         print(f"Return type: {selected_function.returns.type}")
+
+        if any(
+            definition.type != "number"
+            for definition in selected_function.parameters.values()
+        ):
+            print("Argument generation skipped: non-number parameters.")
+            continue
+
+        try:
+            arguments = generate_number_arguments(
+                model=model,
+                request=request.prompt,
+                function=selected_function,
+                token_texts=argument_token_texts,
+            )
+        except ValueError as error:
+            print(f"Argument generation failed: {error}")
+            continue
+
+        print(f"Arguments: {json.dumps(arguments)}")
 
 
 if __name__ == "__main__":
