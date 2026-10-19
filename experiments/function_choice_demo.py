@@ -8,6 +8,7 @@ from pydantic import ValidationError
 
 from src.file_io import read_json
 from src.validation import validate_functions, validate_prompts
+from src.function_catalog import find_function
 
 
 def main() -> None:
@@ -155,10 +156,19 @@ def main() -> None:
 
         reply = model.decode(generated_ids)
 
-        if reply in function_names:
-            print(f"Selected function: {reply}")
-        else:
-            print(f"Incomplete or invalid function name: {reply!r}")
+        try:
+            selected_function = find_function(functions, reply)
+        except ValueError as error:
+            print(f"Function selection failed: {error}")
+            continue
+
+        print(f"Selected function: {selected_function.name}")
+        print(f"Description: {selected_function.description}")
+
+        for name, definition in selected_function.parameters.items():
+            print(f"Parameter: {name} | Type: {definition.type}")
+
+        print(f"Return type: {selected_function.returns.type}")
 
 
 if __name__ == "__main__":
