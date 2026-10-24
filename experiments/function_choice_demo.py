@@ -9,7 +9,7 @@ from pydantic import ValidationError
 from src.file_io import read_json
 from src.validation import validate_functions, validate_prompts
 from src.function_catalog import find_function
-from src.number_generation import generate_number_arguments
+from src.argument_generation import generate_arguments
 
 
 def main() -> None:
@@ -179,15 +179,15 @@ def main() -> None:
 
         print(f"Return type: {selected_function.returns.type}")
 
-        if any(
-            definition.type != "number"
-            for definition in selected_function.parameters.values()
-        ):
-            print("Argument generation skipped: non-number parameters.")
-            continue
+        # if any(
+        #     definition.type != "number"
+        #     for definition in selected_function.parameters.values()
+        # ):
+        #     print("Argument generation skipped: non-number parameters.")
+        #     continue
 
         try:
-            arguments = generate_number_arguments(
+            arguments = generate_arguments(
                 model=model,
                 request=request.prompt,
                 function=selected_function,
@@ -197,7 +197,7 @@ def main() -> None:
             print(f"Argument generation failed: {error}")
             continue
 
-        print(f"Arguments: {json.dumps(arguments)}")
+        print(f"Arguments: {json.dumps(arguments, ensure_ascii=False)}")
 
 
 if __name__ == "__main__":
